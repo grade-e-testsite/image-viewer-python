@@ -1,11 +1,22 @@
 import sys
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QAction, QFileDialog,
-    QVBoxLayout, QHBoxLayout, QWidget, QLabel, QSlider,
-    QRadioButton, QButtonGroup, QCheckBox, QStatusBar, QShortcut
+    QApplication,
+    QMainWindow,
+    QAction,
+    QFileDialog,
+    QVBoxLayout,
+    QHBoxLayout,
+    QWidget,
+    QLabel,
+    QSlider,
+    QRadioButton,
+    QButtonGroup,
+    QCheckBox,
+    QShortcut,
 )
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QImage, QPainter, QPen, QColor, QKeySequence
+from PyQt5.QtGui import QImage, QPainter, QPen, QColor, QKeySequence, QTransform
+
 
 # ======================
 # 1) Model
@@ -20,10 +31,12 @@ class ImageModel:
         self._undo_stack = []
 
     def _push_undo(self):
+        """현재 baseline 이미지를 undo 스택에 복사해서 저장 (작업 전 호출)"""
         if not self._baseline_image.isNull():
             self._undo_stack.append(self._baseline_image.copy())
 
     def undo(self):
+        """스택에서 마지막 이미지를 가져와 baseline으로 되돌림"""
         if self._undo_stack:
             prev_img = self._undo_stack.pop()
             self._baseline_image = prev_img
@@ -47,11 +60,14 @@ class ImageModel:
 
     def invert_colors(self):
         if not self._baseline_image.isNull():
-            self._push_undo()  # 작업 전
+            self._push_undo()
             self._baseline_image.invertPixels(QImage.InvertRgb)
             self._rebuild_highlight_image()
 
-    def draw_brush(self, x, y, color: QColor, brush_size: int, prev_x=None, prev_y=None):
+    def draw_brush(
+        self, x, y, color: QColor, brush_size: int, prev_x=None, prev_y=None
+    ):
+        """브러시로 자유 드로잉 (사각형 캡)"""
         if self._baseline_image.isNull():
             return
         self._push_undo()
@@ -60,7 +76,7 @@ class ImageModel:
         pen = QPen(color, brush_size, Qt.SolidLine, Qt.SquareCap, Qt.MiterJoin)
         painter.setPen(pen)
 
-        if prev_x is not None and prev_y is not None:
+        if (prev_x is not None) and (prev_y is not None):
             painter.drawLine(int(prev_x), int(prev_y), int(x), int(y))
         else:
             painter.drawPoint(int(x), int(y))
@@ -70,6 +86,7 @@ class ImageModel:
             self._rebuild_highlight_image()
 
     def draw_line(self, x1, y1, x2, y2, color: QColor, thickness: int):
+        """시작점→끝점 직선"""
         if self._baseline_image.isNull():
             return
         self._push_undo()
@@ -82,6 +99,31 @@ class ImageModel:
 
         if self._highlight_enabled:
             self._rebuild_highlight_image()
+
+    # -----------------------
+    #    이미지 회전 추가
+    # -----------------------
+    def rotate_clockwise(self):
+        """시계 방향 90도 회전"""
+        if not self._baseline_image.isNull():
+            self._push_undo()
+            transform = QTransform()
+            transform.rotate(90)  # 90도
+            rotated = self._baseline_image.transformed(transform)
+            self._baseline_image = rotated
+            if self._highlight_enabled:
+                self._rebuild_highlight_image()
+
+    def rotate_counterclockwise(self):
+        """반시계 방향 90도 회전"""
+        if not self._baseline_image.isNull():
+            self._push_undo()
+            transform = QTransform()
+            transform.rotate(-90)  # -90도
+            rotated = self._baseline_image.transformed(transform)
+            self._baseline_image = rotated
+            if self._highlight_enabled:
+                self._rebuild_highlight_image()
 
     def set_highlight_enabled(self, enabled: bool):
         self._highlight_enabled = enabled
@@ -133,8 +175,9 @@ class ImageViewModel:
         self._model.invert_colors()
 
     def draw_brush(self, x, y, prev_x=None, prev_y=None):
-        self._model.draw_brush(x, y, self._draw_color, self._draw_thickness,
-                               prev_x, prev_y)
+        self._model.draw_brush(
+            x, y, self._draw_color, self._draw_thickness, prev_x, prev_y
+        )
 
     def draw_line(self, x1, y1, x2, y2):
         self._model.draw_line(x1, y1, x2, y2, self._draw_color, self._draw_thickness)
@@ -143,18 +186,28 @@ class ImageViewModel:
     def undo(self):
         self._model.undo()
 
+    # 회전
+    def rotate_clockwise(self):
+        self._model.rotate_clockwise()
+
+    def rotate_counterclockwise(self):
+        self._model.rotate_counterclockwise()
+
+    # 하이라이트
     def set_highlight_enabled(self, enabled: bool):
         self._model.set_highlight_enabled(enabled)
 
     def is_highlight_enabled(self) -> bool:
         return self._model.is_highlight_enabled()
 
+    # 선 모드
     def set_line_mode(self, enabled: bool):
         self._line_mode = enabled
 
     def is_line_mode(self) -> bool:
         return self._line_mode
 
+    # 색/두께
     def set_draw_color(self, color: QColor):
         self._draw_color = color
 
@@ -167,12 +220,22 @@ class ImageViewModel:
     def get_draw_thickness(self) -> int:
         return self._draw_thickness
 
+    # 이미지 접근
     def get_current_image(self) -> QImage:
         return self._model.get_current_image()
 
+    def get_image_size(self):
+        """
+        현재 baseline 이미지 크기 (width, height) 반환
+        """
+        img = self._model._baseline_image
+        if img.isNull():
+            return (0, 0)
+        return (img.width(), img.height())
+
 
 # ======================
-# 3) ImageCanvas
+# 3) ImageCanvas (View - 그림판)
 # ======================
 class ImageCanvas(QWidget):
     def __init__(self, view_model: ImageViewModel, parent=None):
@@ -207,21 +270,18 @@ class ImageCanvas(QWidget):
         else:
             painter.fillRect(self.rect(), Qt.gray)
 
-        # --- 핵심 변경점 ---
-        # 선긋기 모드이지만 아직 첫 클릭을 안 했다면 -> 브러시 미리보기처럼 표시
-        # 선긋기 모드 + 첫 클릭이 된 상태라면 -> 선 프리뷰 표시
-
+        # 선 모드 vs 브러시 미리보기
         if self.view_model.is_line_mode():
             if self._line_start is None:
-                # 아직 첫 클릭 전 => 브러시 미리보기 (파란 사각형)
+                # 아직 첫 클릭 전 -> 브러시 미리보기
                 if self._mouse_pos:
                     self._draw_brush_preview(painter)
             else:
-                # 첫 클릭 후 => 선 프리뷰 (파란 선)
+                # 첫 클릭 후 -> 선 프리뷰
                 if self._mouse_pos:
                     self._draw_line_preview(painter)
         else:
-            # line_mode가 아니면, 항상 브러시 미리보기
+            # 브러시 모드
             if self._mouse_pos:
                 self._draw_brush_preview(painter)
 
@@ -229,31 +289,34 @@ class ImageCanvas(QWidget):
         painter.end()
 
     def _draw_brush_preview(self, painter: QPainter):
-        """파란 사각형으로 브러시 미리보기"""
         brush_size = self.view_model.get_draw_thickness()
         half = brush_size / 2.0
+        if self._mouse_pos is None:
+            return
         cx = (self._mouse_pos.x() - self._translate_x) / self._scale_factor
         cy = (self._mouse_pos.y() - self._translate_y) / self._scale_factor
 
         pen = QPen(Qt.blue, 1, Qt.SolidLine)
         painter.setPen(pen)
         painter.setBrush(Qt.NoBrush)
-        painter.drawRect(int(cx - half), int(cy - half),
-                         int(brush_size), int(brush_size))
+        painter.drawRect(
+            int(cx - half), int(cy - half), int(brush_size), int(brush_size)
+        )
 
     def _draw_line_preview(self, painter: QPainter):
-        """파란색 선 프리뷰 (선긋기 모드, 첫 클릭 후 두 번째 클릭 전)"""
-        pen = QPen(Qt.blue, self.view_model.get_draw_thickness(),
-                   Qt.SolidLine, Qt.SquareCap, Qt.MiterJoin)
+        pen = QPen(
+            Qt.blue,
+            self.view_model.get_draw_thickness(),
+            Qt.SolidLine,
+            Qt.SquareCap,
+            Qt.MiterJoin,
+        )
         painter.setPen(pen)
         sx, sy = self._line_start
         ex = (self._mouse_pos.x() - self._translate_x) / self._scale_factor
         ey = (self._mouse_pos.y() - self._translate_y) / self._scale_factor
         painter.drawLine(int(sx), int(sy), int(ex), int(ey))
 
-    # ---------------------
-    # 마우스 이벤트
-    # ---------------------
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             x_unscaled = (event.x() - self._translate_x) / self._scale_factor
@@ -261,15 +324,15 @@ class ImageCanvas(QWidget):
 
             if self.view_model.is_line_mode():
                 if self._line_start is None:
-                    # 첫 번째 클릭
                     self._line_start = (x_unscaled, y_unscaled)
                 else:
-                    # 두 번째 클릭 -> 선 그리기 확정
-                    self.view_model.draw_line(self._line_start[0], self._line_start[1],
-                                              x_unscaled, y_unscaled)
+                    self.view_model.draw_line(
+                        self._line_start[0], self._line_start[1], x_unscaled, y_unscaled
+                    )
                     self._line_start = None
                 self.update()
             else:
+                # 브러시 모드
                 self._drawing_brush = True
                 self._prev_x = x_unscaled
                 self._prev_y = y_unscaled
@@ -282,19 +345,20 @@ class ImageCanvas(QWidget):
         x_unscaled = (event.x() - self._translate_x) / self._scale_factor
         y_unscaled = (event.y() - self._translate_y) / self._scale_factor
 
-        # 메인 윈도우 상태바 표시
-        if self.parent() and hasattr(self.parent(), "statusBar"):
-            if self.parent().statusBar():
-                self.parent().statusBar().showMessage(
-                    f"X={int(x_unscaled)}, Y={int(y_unscaled)}"
-                )
+        # ----- 수정된 부분 -----
+        main_win = self.window()  # 최상위 윈도우(보통 QMainWindow)
+        if main_win and hasattr(main_win, "update_pointer_label"):
+            main_win.update_pointer_label(int(x_unscaled), int(y_unscaled))
+        # -----------------------
 
+        # 나머지 기존 로직
         if self.view_model.is_line_mode():
-            # 선 모드
-            self.update()  # 프리뷰 갱신
+            self.update()
         else:
             if self._drawing_brush:
-                self.view_model.draw_brush(x_unscaled, y_unscaled, self._prev_x, self._prev_y)
+                self.view_model.draw_brush(
+                    x_unscaled, y_unscaled, self._prev_x, self._prev_y
+                )
                 self._prev_x = x_unscaled
                 self._prev_y = y_unscaled
             self.update()
@@ -311,6 +375,7 @@ class ImageCanvas(QWidget):
         mod = event.modifiers()
 
         if mod & Qt.ControlModifier:
+            # 마우스 중심 확대/축소
             scale_factor = 1.1 if (delta > 0) else 0.9
             mx = event.x()
             my = event.y()
@@ -362,14 +427,18 @@ class MainWindow(QMainWindow):
         self.init_ui()
 
     def init_ui(self):
-        self.setWindowTitle("선긋기 첫 클릭 전 브러시 미리보기, 후 선 프리뷰")
+        self.setWindowTitle("PyQt - 회전 후 이미지 크기 재조정 포함")
         self.resize(1200, 800)
 
-        self.setStatusBar(QStatusBar(self))
+        # 마우스 좌표 라벨
+        self.pointer_label = QLabel("Pointer: (---, ---)")
+        # 이미지 크기 라벨
+        w, h = self.view_model.get_image_size()
+        self.image_size_label = QLabel(f"Image Size: {w} x {h}")
 
         self.canvas = ImageCanvas(self.view_model, parent=self)
 
-        # Ctrl+Z -> Undo
+        # Ctrl+Z -> Undo 단축키
         undo_shortcut = QShortcut(QKeySequence("Ctrl+Z"), self)
         undo_shortcut.activated.connect(self.on_undo)
 
@@ -388,19 +457,19 @@ class MainWindow(QMainWindow):
         self.radio_gray.toggled.connect(self.on_color_changed)
         self.radio_white.toggled.connect(self.on_color_changed)
 
-        # 두께 슬라이더
+        # 두께 슬라이더 + 라벨
         self.size_slider = QSlider(Qt.Horizontal)
         self.size_slider.setRange(1, 40)
         self.size_slider.setValue(self.view_model.get_draw_thickness())
         self.size_slider.valueChanged.connect(self.on_thickness_changed)
         self.thickness_label = QLabel(f"두께: {self.view_model.get_draw_thickness()}")
 
-        # 선긋기 모드
+        # 선긋기 모드 체크박스
         self.line_mode_checkbox = QCheckBox("선 긋기 모드")
         self.line_mode_checkbox.setChecked(False)
         self.line_mode_checkbox.stateChanged.connect(self.on_line_mode_changed)
 
-        # 평행 이동 슬라이더 (가로/세로)
+        # 평행 이동 슬라이더
         self.translate_x_slider = QSlider(Qt.Horizontal)
         self.translate_x_slider.setRange(-1000, 1000)
         self.translate_x_slider.setValue(0)
@@ -412,7 +481,6 @@ class MainWindow(QMainWindow):
         self.translate_y_slider.valueChanged.connect(self.canvas.set_translate_y)
         self.translate_y_slider.setInvertedAppearance(True)
 
-        # 오른쪽 레이아웃
         right_layout = QVBoxLayout()
         right_layout.addWidget(QLabel("색상:"))
         right_layout.addWidget(self.radio_black)
@@ -422,9 +490,12 @@ class MainWindow(QMainWindow):
         right_layout.addWidget(self.thickness_label)
         right_layout.addWidget(self.size_slider)
         right_layout.addWidget(self.line_mode_checkbox)
+
+        right_layout.addWidget(self.pointer_label)
+        right_layout.addWidget(self.image_size_label)
+
         right_layout.addStretch()
 
-        # 가운데 (캔버스 + 세로 슬라이더)
         center_layout = QHBoxLayout()
         center_layout.addWidget(self.canvas, stretch=1)
         center_layout.addWidget(self.translate_y_slider)
@@ -445,8 +516,8 @@ class MainWindow(QMainWindow):
 
         # 메뉴
         menubar = self.menuBar()
-        file_menu = menubar.addMenu("File")
 
+        file_menu = menubar.addMenu("File")
         open_action = QAction("Open", self)
         open_action.triggered.connect(self.open_file)
         file_menu.addAction(open_action)
@@ -466,31 +537,52 @@ class MainWindow(QMainWindow):
         highlight_action.triggered.connect(self.toggle_highlight)
         edit_menu.addAction(highlight_action)
 
+        # 회전 메뉴 (시계/반시계)
+        rotate_cw_action = QAction("Rotate Clockwise", self)
+        rotate_cw_action.triggered.connect(self.on_rotate_clockwise)
+        edit_menu.addAction(rotate_cw_action)
+
+        rotate_ccw_action = QAction("Rotate Counterclockwise", self)
+        rotate_ccw_action.triggered.connect(self.on_rotate_counterclockwise)
+        edit_menu.addAction(rotate_ccw_action)
+
+    # ---------------------------
+    #  (A) Undo
+    # ---------------------------
     def on_undo(self):
         self.view_model.undo()
+        self.update_image_info()
         self.canvas.update()
 
+    # ---------------------------
+    #  (B) File
+    # ---------------------------
     def open_file(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "Open Image", "",
-            "Images (*.png *.jpg *.jpeg *.bmp *.pgm);;All Files (*.*)"
+            self,
+            "Open Image",
+            "",
+            "Images (*.png *.jpg *.jpeg *.bmp *.pgm);;All Files (*.*)",
         )
         if path:
             if self.view_model.open_image(path):
                 img = self.view_model.get_current_image()
                 if not img.isNull():
                     self.canvas.setFixedSize(img.width(), img.height())
+                self.update_image_info()
                 self.canvas.update()
 
     def save_file(self):
         path, _ = QFileDialog.getSaveFileName(
-            self, "Save Image", "",
-            "PNG (*.png);;JPG (*.jpg);;All Files (*.*)"
+            self, "Save Image", "", "PNG (*.png);;JPG (*.jpg);;All Files (*.*)"
         )
         if path:
             if not self.view_model.save_image(path):
                 print("이미지 저장 실패")
 
+    # ---------------------------
+    #  (C) Edit
+    # ---------------------------
     def on_invert(self):
         self.view_model.invert_image()
         self.canvas.update()
@@ -499,6 +591,27 @@ class MainWindow(QMainWindow):
         self.view_model.set_highlight_enabled(checked)
         self.canvas.update()
 
+    def on_rotate_clockwise(self):
+        """시계 방향 회전 후 캔버스 크기를 재조정"""
+        self.view_model.rotate_clockwise()
+        img = self.view_model.get_current_image()
+        if not img.isNull():
+            self.canvas.setFixedSize(img.width(), img.height())
+        self.update_image_info()
+        self.canvas.update()
+
+    def on_rotate_counterclockwise(self):
+        """반시계 방향 회전 후 캔버스 크기를 재조정"""
+        self.view_model.rotate_counterclockwise()
+        img = self.view_model.get_current_image()
+        if not img.isNull():
+            self.canvas.setFixedSize(img.width(), img.height())
+        self.update_image_info()
+        self.canvas.update()
+
+    # ---------------------------
+    #  (D) UI
+    # ---------------------------
     def on_color_changed(self):
         if self.radio_black.isChecked():
             self.view_model.set_draw_color(QColor(0, 0, 0))
@@ -513,11 +626,23 @@ class MainWindow(QMainWindow):
         self.canvas.update()
 
     def on_line_mode_changed(self, state):
-        enabled = (state == Qt.Checked)
+        enabled = state == Qt.Checked
         self.view_model.set_line_mode(enabled)
         if not enabled:
             self.canvas._line_start = None
         self.canvas.update()
+
+    # ---------------------------
+    #  (E) 라벨 업데이트
+    # ---------------------------
+    def update_pointer_label(self, x, y):
+        """마우스 좌표 라벨"""
+        self.pointer_label.setText(f"Pointer: ({x}, {y})")
+
+    def update_image_info(self):
+        """이미지 크기 라벨 갱신"""
+        w, h = self.view_model.get_image_size()
+        self.image_size_label.setText(f"Image Size: {w} x {h}")
 
 
 def main():
@@ -527,6 +652,7 @@ def main():
     window = MainWindow(view_model)
     window.show()
     sys.exit(app.exec_())
+
 
 if __name__ == "__main__":
     main()

@@ -24,7 +24,7 @@ class MainWindow(QMainWindow):
         self.init_ui()
 
     def init_ui(self):
-        self.setWindowTitle("PyQt - 브러시/선/사각형 모드 + 빨간색 표시 + 회전 등")
+        self.setWindowTitle("Image viewer")
         self.resize(1200, 800)
 
         # 마우스 좌표 라벨
@@ -41,10 +41,10 @@ class MainWindow(QMainWindow):
         undo_shortcut.activated.connect(self.on_undo)
 
         # 색상 라디오버튼
-        self.radio_black = QRadioButton("안 (#000000)")
+        self.radio_black = QRadioButton("Outside (#000000)")
         self.radio_black.setChecked(True)
-        self.radio_gray = QRadioButton("바깥 (#010101)")
-        self.radio_white = QRadioButton("경계선 (#FFFFFF)")
+        self.radio_gray = QRadioButton("Inside (#010101)")
+        self.radio_white = QRadioButton("Boundary (#FFFFFF)")
 
         color_group = QButtonGroup(self)
         color_group.addButton(self.radio_black)
@@ -60,12 +60,14 @@ class MainWindow(QMainWindow):
         self.size_slider.setRange(1, 40)
         self.size_slider.setValue(self.view_model.get_draw_thickness())
         self.size_slider.valueChanged.connect(self.on_thickness_changed)
-        self.thickness_label = QLabel(f"두께: {self.view_model.get_draw_thickness()}")
+        self.thickness_label = QLabel(
+            f"Thickness: {self.view_model.get_draw_thickness()}"
+        )
 
         # 모드 라디오버튼 (브러시 / 선 / 사각형)
-        self.radio_brush = QRadioButton("브러시 모드")
-        self.radio_line = QRadioButton("선 긋기 모드")
-        self.radio_rect = QRadioButton("사각형 모드")
+        self.radio_brush = QRadioButton("Brush")
+        self.radio_line = QRadioButton("Line")
+        self.radio_rect = QRadioButton("Rectangle")
 
         self.radio_brush.setChecked(True)  # 기본 브러시
         mode_group = QButtonGroup()
@@ -91,7 +93,7 @@ class MainWindow(QMainWindow):
 
         # 우측 레이아웃
         right_layout = QVBoxLayout()
-        right_layout.addWidget(QLabel("색상:"))
+        right_layout.addWidget(QLabel("Color:"))
         right_layout.addWidget(self.radio_black)
         right_layout.addWidget(self.radio_gray)
         right_layout.addWidget(self.radio_white)

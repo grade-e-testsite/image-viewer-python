@@ -14,6 +14,7 @@ from PyQt5.QtWidgets import (
 )
 from .image_canvas import ImageCanvas
 from PyQt5.QtGui import QKeySequence, QColor
+from PyQt5.QtCore import Qt
 
 
 class MainWindow(QMainWindow):

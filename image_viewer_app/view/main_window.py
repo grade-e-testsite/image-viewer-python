@@ -234,7 +234,7 @@ class MainWindow(QMainWindow):
 
     def on_thickness_changed(self, value):
         self.view_model.set_draw_thickness(value)
-        self.thickness_label.setText(f"두께: {value}")
+        self.thickness_label.setText(f"Thickness: {value}")
         self.canvas.update()
 
     def on_mode_changed(self):

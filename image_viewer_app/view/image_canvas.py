@@ -22,6 +22,7 @@ class ImageCanvas(QWidget):
         self._translate_y = 0
 
         self.setMouseTracking(True)
+        self.setFocusPolicy(Qt.StrongFocus)  # Ensure the widget can receive key events
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -226,3 +227,12 @@ class ImageCanvas(QWidget):
     def set_translate_y(self, value: int):
         self._translate_y = value
         self.update()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape:
+            # Cancel line or rectangle drawing
+            if self._line_start is not None:
+                self._line_start = None
+            if self._rect_start is not None:
+                self._rect_start = None
+            self.update()

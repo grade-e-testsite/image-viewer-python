@@ -1,4 +1,4 @@
-from model import ImageModel
+from ..model.image_model import ImageModel
 from PyQt5.QtGui import QColor, QImage
 
 

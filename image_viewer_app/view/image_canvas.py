@@ -1,4 +1,4 @@
-from viewmodel import ImageViewModel
+from ..viewmodel import ImageViewModel
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPainter, QPen
 from PyQt5.QtWidgets import QWidget

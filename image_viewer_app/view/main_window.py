@@ -1,4 +1,4 @@
-from viewmodel import ImageViewModel
+from ..viewmodel import ImageViewModel
 from PyQt5.QtWidgets import (
     QMainWindow,
     QVBoxLayout,

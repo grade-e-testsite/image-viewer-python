@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import (
     QAction,
     QFileDialog,
     QShortcut,
+    QMessageBox,  # Add import for QMessageBox
 )
 from .image_canvas import ImageCanvas
 from PyQt5.QtGui import QKeySequence, QColor
@@ -140,6 +141,10 @@ class MainWindow(QMainWindow):
         save_action.triggered.connect(self.save_file)
         file_menu.addAction(save_action)
 
+        exit_action = QAction("Exit", self)  # Add Exit action
+        exit_action.triggered.connect(self.close)  # Connect to close method
+        file_menu.addAction(exit_action)
+
         edit_menu = menubar.addMenu("Edit")
 
         invert_action = QAction("Invert Colors", self)
@@ -264,3 +269,24 @@ class MainWindow(QMainWindow):
         """이미지 크기 라벨 갱신"""
         w, h = self.view_model.get_image_size()
         self.image_size_label.setText(f"Image Size: {w} x {h}")
+
+    def closeEvent(self, event):
+        """Override closeEvent to check for unsaved changes before exiting."""
+        if not self.view_model.is_file_opened():  # Check if a file is opened
+            event.accept()
+            return
+
+        reply = QMessageBox.question(
+            self,
+            "Exit Confirmation",
+            "Do you want to save the file before exiting?",
+            QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
+        )
+
+        if reply == QMessageBox.Yes:
+            self.save_file()
+            event.accept()
+        elif reply == QMessageBox.No:
+            event.accept()
+        else:
+            event.ignore()

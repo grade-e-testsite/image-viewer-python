@@ -151,7 +151,7 @@ class MainWindow(QMainWindow):
         invert_action.triggered.connect(self.on_invert)
         edit_menu.addAction(invert_action)
 
-        highlight_action = QAction("Highlight #010101 → RED", self, checkable=True)
+        highlight_action = QAction("Show occupied area", self, checkable=True)
         highlight_action.setChecked(False)
         highlight_action.triggered.connect(self.toggle_highlight)
         edit_menu.addAction(highlight_action)
@@ -181,7 +181,7 @@ class MainWindow(QMainWindow):
             self,
             "Open Image",
             "",
-            "Images (*.png *.jpg *.jpeg *.bmp *.pgm);;All Files (*.*)",
+            "Images (*.png *.pgm);;All Files (*.*)",
         )
         if path:
             if self.view_model.open_image(path):
@@ -193,11 +193,11 @@ class MainWindow(QMainWindow):
 
     def save_file(self):
         path, _ = QFileDialog.getSaveFileName(
-            self, "Save Image", "", "PNG (*.png);;JPG (*.jpg);;All Files (*.*)"
+            self, "Save Image", "", "PNG (*.png);;PGM (*.pgm);;All Files (*.*)"
         )
         if path:
             if not self.view_model.save_image(path):
-                print("이미지 저장 실패")
+                print("Failed to save image.")
 
     # ---------------------------
     #  (C) Edit

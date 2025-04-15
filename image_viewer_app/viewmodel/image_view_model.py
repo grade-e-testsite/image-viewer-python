@@ -18,6 +18,9 @@ class ImageViewModel:
     def save_image(self, path: str) -> bool:
         return self._model.save_image(path)
 
+    def is_file_opened(self) -> bool:
+        return not self._model.get_current_image().isNull()
+
     def invert_image(self):
         self._model.invert_colors()
 

@@ -36,8 +36,7 @@ class ImageModel:
     def save_image(self, path: str) -> bool:
         if self._baseline_image.isNull():
             return False
-        current_img = self.get_current_image()
-        return current_img.save(path)
+        return self._baseline_image.save(path)
 
     def invert_colors(self):
         if not self._baseline_image.isNull():

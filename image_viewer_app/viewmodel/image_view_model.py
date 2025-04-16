@@ -6,7 +6,7 @@ class ImageViewModel:
     def __init__(self, model: ImageModel):
         self._model = model
         self._draw_color = QColor(0, 0, 0)
-        self._draw_thickness = 5
+        self._draw_thickness = 2
 
         # 모드: 브러시 / 선 / 사각형
         self._line_mode = False

@@ -59,7 +59,7 @@ class MainWindow(QMainWindow):
 
         # 두께 슬라이더 + 라벨
         self.size_slider = QSlider(Qt.Horizontal)
-        self.size_slider.setRange(1, 40)
+        self.size_slider.setRange(1, 50)
         self.size_slider.setValue(self.view_model.get_draw_thickness())
         self.size_slider.valueChanged.connect(self.on_thickness_changed)
         self.thickness_label = QLabel(

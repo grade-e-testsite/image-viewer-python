@@ -1,10 +1,12 @@
 from ..viewmodel import ImageViewModel
-from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPainter, QPen
 from PyQt5.QtWidgets import QWidget
+from PyQt5.QtCore import Qt, pyqtSignal
 
 
 class ImageCanvas(QWidget):
+    pointerMoved = pyqtSignal(int, int)  # x, y 좌표 전달 시그널
+
     def __init__(self, view_model: ImageViewModel, parent=None):
         super().__init__(parent)
         self.view_model = view_model
@@ -156,9 +158,8 @@ class ImageCanvas(QWidget):
         y_unscaled = (event.y() - self._translate_y) / self._scale_factor
 
         # 부모(MainWindow) 쪽에 마우스 좌표 알림
-        main_win = self.window()
-        if hasattr(main_win, "update_pointer_label"):
-            main_win.update_pointer_label(int(x_unscaled), int(y_unscaled))
+        self.pointerMoved.emit(int(x_unscaled), int(y_unscaled))
+
         # 브러시 드래그
         if (not self.view_model.is_line_mode()) and (
             not self.view_model.is_rect_mode()

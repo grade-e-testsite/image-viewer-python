@@ -36,6 +36,7 @@ class MainWindow(QMainWindow):
         self.image_size_label = QLabel(f"Image Size: {w} x {h}")
 
         self.canvas = ImageCanvas(self.view_model, parent=self)
+        self.canvas.pointerMoved.connect(self.update_pointer_label)
 
         # Ctrl+Z -> Undo 단축키
         undo_shortcut = QShortcut(QKeySequence("Ctrl+Z"), self)

@@ -156,9 +156,9 @@ class ImageCanvas(QWidget):
         y_unscaled = (event.y() - self._translate_y) / self._scale_factor
 
         # 부모(MainWindow) 쪽에 마우스 좌표 알림
-        if self.parent() and hasattr(self.parent(), "update_pointer_label"):
-            self.parent().update_pointer_label(int(x_unscaled), int(y_unscaled))
-
+        main_win = self.window()
+        if hasattr(main_win, "update_pointer_label"):
+            main_win.update_pointer_label(int(x_unscaled), int(y_unscaled))
         # 브러시 드래그
         if (not self.view_model.is_line_mode()) and (
             not self.view_model.is_rect_mode()

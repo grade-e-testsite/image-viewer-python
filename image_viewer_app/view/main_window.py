@@ -142,6 +142,10 @@ class MainWindow(QMainWindow):
         save_action.triggered.connect(self.save_file)
         file_menu.addAction(save_action)
 
+        export_action = QAction("Export PNG File (Inverted)", self)
+        export_action.triggered.connect(self.on_export_png)
+        file_menu.addAction(export_action)
+
         exit_action = QAction("Exit", self)  # Add Exit action
         exit_action.triggered.connect(self.close)  # Connect to close method
         file_menu.addAction(exit_action)
@@ -291,3 +295,12 @@ class MainWindow(QMainWindow):
             event.accept()
         else:
             event.ignore()
+
+    def on_export_png(self):
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Export Inverted PNG", "", "PNG Files (*.png)"
+        )
+        if path:
+            success = self.view_model.export_inverted_image(path)
+            if not success:
+                print("Failed to export inverted PNG.")

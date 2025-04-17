@@ -162,3 +162,10 @@ class ImageModel:
             return self._highlighted_image
         else:
             return self._baseline_image
+
+    def export_inverted_image(self, path: str) -> bool:
+        if self._baseline_image.isNull():
+            return False
+        img = self._baseline_image.copy()
+        img.invertPixels(QImage.InvertRgb)
+        return img.save(path)

@@ -89,3 +89,6 @@ class ImageViewModel:
         if img.isNull():
             return (0, 0)
         return (img.width(), img.height())
+
+    def export_inverted_image(self, path: str) -> bool:
+        return self._model.export_inverted_image(path)

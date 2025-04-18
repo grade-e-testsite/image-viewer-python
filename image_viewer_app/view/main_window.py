@@ -180,6 +180,11 @@ class MainWindow(QMainWindow):
         show_origin_action.triggered.connect(self.toggle_show_origin)
         tool_menu.addAction(show_origin_action)
 
+        show_coord_action = QAction("Show Coordinate", self, checkable=True)
+        show_coord_action.setChecked(False)
+        show_coord_action.triggered.connect(self.toggle_show_coords)
+        tool_menu.addAction(show_coord_action)
+
     # ---------------------------
     #  (A) Undo
     # ---------------------------
@@ -276,9 +281,8 @@ class MainWindow(QMainWindow):
     # ---------------------------
     #  (E) 라벨 업데이트
     # ---------------------------
-    def update_pointer_label(self, x, y):
-        """마우스 좌표 라벨"""
-        self.pointer_label.setText(f"Pointer: ({x}, {y})")
+    def update_pointer_label(self, x: int, y: int, label: str):
+        self.pointer_label.setText(f"Pointer: {label}")
 
     def update_image_info(self):
         """이미지 크기 라벨 갱신"""
@@ -329,3 +333,6 @@ class MainWindow(QMainWindow):
     def toggle_show_origin(self, checked):
         self.view_model.set_show_origin(checked)
         self.canvas.update()
+
+    def toggle_show_coords(self, checked):
+        self.view_model.set_show_coords(checked)

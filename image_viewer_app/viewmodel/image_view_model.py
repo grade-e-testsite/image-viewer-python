@@ -101,3 +101,9 @@ class ImageViewModel:
 
     def get_show_origin(self) -> bool:
         return self._model.get_show_origin()
+
+    def set_show_coords(self, enabled: bool):
+        self._model.set_show_coords(enabled)
+
+    def get_show_coords(self):
+        return self._model.get_show_coords()

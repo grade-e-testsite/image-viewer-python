@@ -9,6 +9,7 @@ class ImageModel:
         self._highlighted_image = QImage()
         self._highlight_enabled = False
         self._show_origin = False
+        self._show_coords = False
 
         # Undo 스택
         self._undo_stack = []
@@ -181,3 +182,9 @@ class ImageModel:
 
     def get_show_origin(self) -> bool:
         return self._show_origin
+
+    def set_show_coords(self, enabled: bool):
+        self._show_coords = enabled
+
+    def get_show_coords(self):
+        return self._show_coords

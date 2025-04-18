@@ -40,3 +40,16 @@ class MapMetadata:
         y_axis = (ox, oy, ox, oy - length_px)
 
         return x_axis, y_axis
+
+    def pixel_to_world(self, px: int, py: int):
+        """
+        픽셀 좌표 (px, py) → 실좌표 (x[m], y[m])
+        이미지 좌측 하단 기준
+        """
+        if self.origin is None or self.resolution is None or self.image_height is None:
+            return None
+
+        ox_m, oy_m, _ = self.origin
+        x = ox_m + px * self.resolution
+        y = oy_m + (self.image_height - py) * self.resolution  # y축 반전 고려
+        return x, y

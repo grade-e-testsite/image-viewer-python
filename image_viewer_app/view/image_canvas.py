@@ -5,7 +5,8 @@ from PyQt5.QtCore import Qt, pyqtSignal
 
 
 class ImageCanvas(QWidget):
-    pointerMoved = pyqtSignal(int, int)  # x, y 좌표 전달 시그널
+    # pointerMoved = pyqtSignal(int, int)  # x, y 좌표 전달 시그널
+    pointerMoved = pyqtSignal(int, int, str)
 
     def __init__(self, view_model: ImageViewModel, parent=None):
         super().__init__(parent)
@@ -173,22 +174,30 @@ class ImageCanvas(QWidget):
     def mouseMoveEvent(self, event):
         self._mouse_pos = event.pos()
 
-        x_unscaled = (event.x() - self._translate_x) / self._scale_factor
-        y_unscaled = (event.y() - self._translate_y) / self._scale_factor
+        px = int((event.x() - self._translate_x) / self._scale_factor)
+        py = int((event.y() - self._translate_y) / self._scale_factor)
 
-        # 부모(MainWindow) 쪽에 마우스 좌표 알림
-        self.pointerMoved.emit(int(x_unscaled), int(y_unscaled))
+        meta = self.view_model.get_metadata()
+        if self.view_model.get_show_coords() and meta and meta.origin:
+            result = meta.pixel_to_world(px, py)
+            if result:
+                x_m, y_m = result
+                label = f"({x_m:.2f}, {y_m:.2f}) m"
+            else:
+                label = f"({px}, {py}) px"
+        else:
+            label = f"({px}, {py}) px"
+
+        self.pointerMoved.emit(px, py, label)
 
         # 브러시 드래그
         if (not self.view_model.is_line_mode()) and (
             not self.view_model.is_rect_mode()
         ):
             if self._drawing_brush:
-                self.view_model.draw_brush(
-                    x_unscaled, y_unscaled, self._prev_x, self._prev_y
-                )
-                self._prev_x = x_unscaled
-                self._prev_y = y_unscaled
+                self.view_model.draw_brush(px, py, self._prev_x, self._prev_y)
+                self._prev_x = px
+                self._prev_y = py
 
         self.update()
 

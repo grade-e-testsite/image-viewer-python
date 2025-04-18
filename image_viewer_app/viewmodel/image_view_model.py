@@ -95,3 +95,9 @@ class ImageViewModel:
 
     def get_metadata(self):
         return self._model.get_metadata()
+
+    def set_show_origin(self, enabled: bool):
+        self._model.set_show_origin(enabled)
+
+    def get_show_origin(self) -> bool:
+        return self._model.get_show_origin()

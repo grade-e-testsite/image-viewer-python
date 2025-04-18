@@ -161,11 +161,6 @@ class MainWindow(QMainWindow):
         highlight_action.triggered.connect(self.toggle_highlight)
         edit_menu.addAction(highlight_action)
 
-        tool_menu = menubar.addMenu("Tools")
-        import_meta_action = QAction("Import Meta File", self)
-        import_meta_action.triggered.connect(self.on_import_metadata)
-        tool_menu.addAction(import_meta_action)
-
         # 회전 메뉴 (시계/반시계)
         rotate_cw_action = QAction("Rotate Clockwise", self)
         rotate_cw_action.triggered.connect(self.on_rotate_clockwise)
@@ -174,6 +169,16 @@ class MainWindow(QMainWindow):
         rotate_ccw_action = QAction("Rotate Counterclockwise", self)
         rotate_ccw_action.triggered.connect(self.on_rotate_counterclockwise)
         edit_menu.addAction(rotate_ccw_action)
+
+        tool_menu = menubar.addMenu("Tools")
+        import_meta_action = QAction("Import Meta File", self)
+        import_meta_action.triggered.connect(self.on_import_metadata)
+        tool_menu.addAction(import_meta_action)
+
+        show_origin_action = QAction("Show Origin", self, checkable=True)
+        show_origin_action.setChecked(False)
+        show_origin_action.triggered.connect(self.toggle_show_origin)
+        tool_menu.addAction(show_origin_action)
 
     # ---------------------------
     #  (A) Undo
@@ -320,3 +325,7 @@ class MainWindow(QMainWindow):
             img = self.view_model.get_current_image()
             metadata.set_image_height(img.height())
             self.canvas.update()
+
+    def toggle_show_origin(self, checked):
+        self.view_model.set_show_origin(checked)
+        self.canvas.update()

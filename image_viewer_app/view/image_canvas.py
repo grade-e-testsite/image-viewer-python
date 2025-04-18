@@ -43,18 +43,21 @@ class ImageCanvas(QWidget):
         meta = self.view_model.get_metadata()
         origin_pos = meta.get_origin_pixel_position()
 
-        if origin_pos:
-            painter.setPen(QPen(Qt.green, 6))
-            painter.drawPoint(*origin_pos)
+        if self.view_model.get_show_origin():
+            meta = self.view_model.get_metadata()
+            origin_pos = meta.get_origin_pixel_position()
 
-            # 축 표시
-            x_axis, y_axis = meta.get_axes_pixel_lines(length_px=80)
-            if x_axis:
-                painter.setPen(QPen(Qt.red, 2))  # x축: 빨간색
-                painter.drawLine(*x_axis)
-            if y_axis:
-                painter.setPen(QPen(Qt.blue, 2))  # y축: 파란색
-                painter.drawLine(*y_axis)
+            if origin_pos:
+                painter.setPen(QPen(Qt.green, 6))
+                painter.drawPoint(*origin_pos)
+
+                x_axis, y_axis = meta.get_axes_pixel_lines(length_px=80)
+                if x_axis:
+                    painter.setPen(QPen(Qt.red, 2))
+                    painter.drawLine(*x_axis)
+                if y_axis:
+                    painter.setPen(QPen(Qt.blue, 2))
+                    painter.drawLine(*y_axis)
 
         # --- 모드별 프리뷰 ---
         if self.view_model.is_line_mode():

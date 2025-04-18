@@ -8,6 +8,7 @@ class ImageModel:
         self._baseline_image = QImage()
         self._highlighted_image = QImage()
         self._highlight_enabled = False
+        self._show_origin = False
 
         # Undo 스택
         self._undo_stack = []
@@ -174,3 +175,9 @@ class ImageModel:
 
     def get_metadata(self):
         return self._metadata
+
+    def set_show_origin(self, enabled: bool):
+        self._show_origin = enabled
+
+    def get_show_origin(self) -> bool:
+        return self._show_origin

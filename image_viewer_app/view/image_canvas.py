@@ -47,6 +47,15 @@ class ImageCanvas(QWidget):
             painter.setPen(QPen(Qt.green, 6))
             painter.drawPoint(*origin_pos)
 
+            # 축 표시
+            x_axis, y_axis = meta.get_axes_pixel_lines(length_px=80)
+            if x_axis:
+                painter.setPen(QPen(Qt.red, 2))  # x축: 빨간색
+                painter.drawLine(*x_axis)
+            if y_axis:
+                painter.setPen(QPen(Qt.blue, 2))  # y축: 파란색
+                painter.drawLine(*y_axis)
+
         # --- 모드별 프리뷰 ---
         if self.view_model.is_line_mode():
             if self._line_start is None:

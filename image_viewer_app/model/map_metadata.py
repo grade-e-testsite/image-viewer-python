@@ -23,3 +23,20 @@ class MapMetadata:
         px = -ox_m / self.resolution
         py = self.image_height - (-oy_m / self.resolution)
         return int(px), int(py)
+
+    def get_axes_pixel_lines(self, length_px=50):
+        """
+        origin 기준으로 x/y 축 라인 반환
+        length_px: 축 선 길이 (픽셀 단위)
+        """
+        if self.origin is None or self.resolution is None or self.image_height is None:
+            return None, None
+
+        ox, oy = self.get_origin_pixel_position()
+
+        # x축: 오른쪽으로
+        x_axis = (ox, oy, ox + length_px, oy)
+        # y축: 위쪽으로
+        y_axis = (ox, oy, ox, oy - length_px)
+
+        return x_axis, y_axis

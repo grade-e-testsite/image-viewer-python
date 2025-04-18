@@ -92,3 +92,6 @@ class ImageViewModel:
 
     def export_inverted_image(self, path: str) -> bool:
         return self._model.export_inverted_image(path)
+
+    def get_metadata(self):
+        return self._model.get_metadata()

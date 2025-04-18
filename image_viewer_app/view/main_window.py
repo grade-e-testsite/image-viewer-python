@@ -161,6 +161,11 @@ class MainWindow(QMainWindow):
         highlight_action.triggered.connect(self.toggle_highlight)
         edit_menu.addAction(highlight_action)
 
+        tool_menu = menubar.addMenu("Tools")
+        import_meta_action = QAction("Import Meta File", self)
+        import_meta_action.triggered.connect(self.on_import_metadata)
+        tool_menu.addAction(import_meta_action)
+
         # 회전 메뉴 (시계/반시계)
         rotate_cw_action = QAction("Rotate Clockwise", self)
         rotate_cw_action.triggered.connect(self.on_rotate_clockwise)
@@ -304,3 +309,14 @@ class MainWindow(QMainWindow):
             success = self.view_model.export_inverted_image(path)
             if not success:
                 print("Failed to export inverted PNG.")
+
+    def on_import_metadata(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Import Meta File", "", "YAML Files (*.yaml *.yml)"
+        )
+        if path:
+            metadata = self.view_model.get_metadata()
+            metadata.load_from_yaml(path)
+            img = self.view_model.get_current_image()
+            metadata.set_image_height(img.height())
+            self.canvas.update()

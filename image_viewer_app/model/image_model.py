@@ -1,5 +1,6 @@
 from PyQt5.QtGui import QImage, QPainter, QColor, QPen, QTransform
 from PyQt5.QtCore import Qt
+from .map_metadata import MapMetadata
 
 
 class ImageModel:
@@ -10,6 +11,7 @@ class ImageModel:
 
         # Undo 스택
         self._undo_stack = []
+        self._metadata = MapMetadata()
 
     def _push_undo(self):
         """현재 baseline 이미지를 undo 스택에 복사해서 저장 (작업 전 호출)"""
@@ -169,3 +171,6 @@ class ImageModel:
         img = self._baseline_image.copy()
         img.invertPixels(QImage.InvertRgb)
         return img.save(path)
+
+    def get_metadata(self):
+        return self._metadata

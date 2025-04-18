@@ -40,6 +40,13 @@ class ImageCanvas(QWidget):
         else:
             painter.fillRect(self.rect(), Qt.gray)
 
+        meta = self.view_model.get_metadata()
+        origin_pos = meta.get_origin_pixel_position()
+
+        if origin_pos:
+            painter.setPen(QPen(Qt.green, 6))
+            painter.drawPoint(*origin_pos)
+
         # --- 모드별 프리뷰 ---
         if self.view_model.is_line_mode():
             if self._line_start is None:

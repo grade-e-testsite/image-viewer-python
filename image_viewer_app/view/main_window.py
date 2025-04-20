@@ -16,6 +16,8 @@ from PyQt5.QtWidgets import (
 from .image_canvas import ImageCanvas
 from PyQt5.QtGui import QKeySequence, QColor
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon
+import os
 
 
 class MainWindow(QMainWindow):
@@ -27,6 +29,12 @@ class MainWindow(QMainWindow):
     def init_ui(self):
         self.setWindowTitle("Image viewer")
         self.resize(1200, 800)
+
+        base_dir = os.path.dirname(os.path.dirname(__file__))
+        icon_path = os.path.join(base_dir, "icons", "app_icon.png")
+        print("ICON PATH:", icon_path)
+        print("EXISTS:", os.path.exists(icon_path))
+        self.setWindowIcon(QIcon(icon_path))
 
         # 마우스 좌표 라벨
         self.pointer_label = QLabel("Pointer: (---, ---)")

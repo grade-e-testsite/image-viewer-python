@@ -34,9 +34,7 @@ class MapMetadata:
 
         ox, oy = self.get_origin_pixel_position()
 
-        # x축: 오른쪽으로
         x_axis = (ox, oy, ox + length_px, oy)
-        # y축: 위쪽으로
         y_axis = (ox, oy, ox, oy - length_px)
 
         return x_axis, y_axis

@@ -25,7 +25,7 @@ class MainWindow(QMainWindow):
         self.init_ui()
 
     def init_ui(self):
-        self.setWindowTitle("Image viewer")
+        self.setWindowTitle("Map editor")
         self.resize(1200, 800)
 
         # 마우스 좌표 라벨
